@@ -161,6 +161,7 @@ input[type="file"]::file-selector-button {
 .format-badge { background-color: var(--secondary); color: white; }
 .level-badge { background-color: var(--accent); color: var(--text); }
 .unit-category-badge { background-color: #fab1a0; color: white; }
+.item-id-badge { background-color: #636e72; color: white; }
 
 /* Buttons */
 button {

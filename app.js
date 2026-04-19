@@ -12,6 +12,7 @@ let activePlayback = { type: null, rate: null, btn: null, timeoutId: null, curre
 const appAreaOriginalHTML = `
     <div id="progress"></div>
     <div class="badge-container" style="margin-bottom: 12px;">
+        <span id="item-id-badge" class="badge item-id-badge"></span>
         <span id="format-badge" class="badge format-badge"></span>
         <span id="level-badge" class="badge level-badge"></span>
         <span id="unit-category-badge" class="badge unit-category-badge" style="display: none;"></span>
@@ -370,6 +371,7 @@ function displayQuestion() {
     const q = currentQuestions[currentIndex];
 
     document.getElementById('progress').textContent = '問題 ' + (currentIndex + 1) + ' / ' + currentQuestions.length;
+    document.getElementById('item-id-badge').textContent = q.id || '';
     document.getElementById('format-badge').textContent = q.format;
     document.getElementById('level-badge').textContent = 'レベル ' + q.level;
     const unitBadge = document.getElementById('unit-category-badge');
