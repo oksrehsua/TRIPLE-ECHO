@@ -870,8 +870,6 @@ function playAudio(text, rate = 1.0, count = 3, btnElem = null, autoNext = false
     }
 
     let currentIteration = startFrom;
-    const voices = window.speechSynthesis.getVoices();
-    const onlineVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Online') || v.name.includes('Google')));
 
     function speak() {
         if (currentIteration >= count) {
@@ -886,7 +884,8 @@ function playAudio(text, rate = 1.0, count = 3, btnElem = null, autoNext = false
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
             utterance.rate = rate;
-            if (onlineVoice) utterance.voice = onlineVoice;
+            const selectedVoice = getSelectedVoice();
+            if (selectedVoice) utterance.voice = selectedVoice;
 
             utterance.onend = () => {
                 currentIteration++;
@@ -970,15 +969,13 @@ function playAudioStep(text, btnElem = null) {
     let rateIdx = 0;
     let repeatIdx = 0;
 
-    const voices = window.speechSynthesis.getVoices();
-    const onlineVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Online') || v.name.includes('Google')));
-
     function speakNext() {
         playCountdown(() => {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
             utterance.rate = rates[rateIdx];
-            if (onlineVoice) utterance.voice = onlineVoice;
+            const selectedVoice = getSelectedVoice();
+            if (selectedVoice) utterance.voice = selectedVoice;
 
             utterance.onend = () => {
                 repeatIdx++;
@@ -1002,10 +999,58 @@ function playAudioStep(text, btnElem = null) {
 }
 
 if ('speechSynthesis' in window) {
-    window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.getVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = initVoiceList;
+    }
+}
+
+function getSelectedVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    const usVoices = voices.filter(v => v.lang === 'en-US' || v.lang === 'en_US');
+    if (usVoices.length === 0) return null;
+
+    const val = document.getElementById('voice-select')?.value || 'random';
+    if (val === 'random') {
+        const randomIndex = Math.floor(Math.random() * usVoices.length);
+        return usVoices[randomIndex];
+    }
+    return usVoices.find(v => v.name === val) || usVoices[0];
+}
+
+function initVoiceList() {
+    const voiceSelect = document.getElementById('voice-select');
+    if (!voiceSelect) return;
+
+    // 現在の選択を保存
+    const savedVoiceName = localStorage.getItem('selected_us_voice') || 'random';
+    
+    const voices = window.speechSynthesis.getVoices();
+    // en-US 系の声を抽出
+    const usVoices = voices.filter(v => v.lang === 'en-US' || v.lang === 'en_US');
+
+    // ドロップダウンを初期化（ランダムを一番上に）
+    voiceSelect.innerHTML = '<option value="random">ランダム（アメリカ英語）</option>';
+
+    usVoices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = voice.name;
+        if (voice.name === savedVoiceName) {
+            option.selected = true;
+        }
+        voiceSelect.appendChild(option);
+    });
+
+    // 選択変更時に保存
+    voiceSelect.onchange = () => {
+        localStorage.setItem('selected_us_voice', voiceSelect.value);
     };
 }
+
+// 読み込み時にも実行
+window.addEventListener('load', () => {
+    setTimeout(initVoiceList, 100);
+});
 
 
 
